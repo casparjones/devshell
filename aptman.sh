@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if yay is installed
+if command -v yay &>/dev/null; then
+    USE_YAY=true
+else
+    USE_YAY=false
+fi
+
 # Define colors
 GREEN="\e[32m"
 YELLOW="\e[33m"
@@ -8,11 +15,9 @@ BLUE="\e[34m"
 NC="\e[0m" # No Color
 
 # Welcome message
-echo -e ""
 echo -e "${GREEN}🌟 ${YELLOW}Welcome to aptman! 🌟${NC}"
 echo -e "${BLUE}======================================${NC}"
 echo -e "This script is located at: ${RED}$HOME/.local/bin/aptman${NC}"
-echo -e "aptman simulates apt commands using pacman."
 echo -e "${BLUE}======================================${NC}"
 
 # Show system info
@@ -30,13 +35,23 @@ case "$1" in
         sudo pacman -Sy
         ;;
     upgrade)
-        echo -e "⬆️ ${GREEN}Upgrading all packages...${NC}"
-        sudo pacman -Syu
+        if [ "$USE_YAY" = true ]; then
+            echo -e "⬆️ ${GREEN}Upgrading all packages (including AUR)...${NC}"
+            yay -Syu
+        else
+            echo -e "⬆️ ${GREEN}Upgrading official packages...${NC}"
+            sudo pacman -Syu
+        fi
         ;;
     install)
         shift
-        echo -e "📦 ${BLUE}Installing package(s): $@${NC}"
-        sudo pacman -S "$@"
+        if [ "$USE_YAY" = true ]; then
+            echo -e "📦 ${BLUE}Installing package(s) (official & AUR): $@${NC}"
+            yay -S "$@"
+        else
+            echo -e "📦 ${BLUE}Installing package(s) (official repo only): $@${NC}"
+            sudo pacman -S "$@"
+        fi
         ;;
     remove)
         shift
@@ -49,8 +64,13 @@ case "$1" in
         ;;
     search)
         shift
-        echo -e "🔍 ${GREEN}Searching for package: $@${NC}"
-        pacman -Ss "$@"
+        if [ "$USE_YAY" = true ]; then
+            echo -e "🔍 ${GREEN}Searching for package (official & AUR): $@${NC}"
+            yay -Ss "$@"
+        else
+            echo -e "🔍 ${GREEN}Searching for package (official repo only): $@${NC}"
+            pacman -Ss "$@"
+        fi
         ;;
     info)
         shift
