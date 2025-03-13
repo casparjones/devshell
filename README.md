@@ -1,4 +1,4 @@
-# 🔥 Linux Helper Scripts: aptman & devilbox.sh
+# 🔥 DevShell - The Linux Helper Scripts
 
 This repository provides two handy Bash scripts:  
 - **`aptman`** - Simulates `apt` commands using `pacman` for Arch-based Linux distributions.  
