@@ -1,10 +1,15 @@
 #!/bin/bash
 
-# Check if yay is installed
-if command -v yay &>/dev/null; then
-    USE_YAY=true
+# Check if paru or yay is installed
+if command -v paru &>/dev/null; then
+    PKG_MANAGER="paru"  # Paru replace Pacman + Yay complete
+    AUR_HELPER=""
+elif command -v yay &>/dev/null; then
+    PKG_MANAGER="pacman"
+    AUR_HELPER="yay"
 else
-    USE_YAY=false
+    PKG_MANAGER="pacman"
+    AUR_HELPER=""
 fi
 
 # Define colors
@@ -15,9 +20,14 @@ BLUE="\e[34m"
 NC="\e[0m" # No Color
 
 # Welcome message
+# Welcome message
 echo -e "${GREEN}🌟 ${YELLOW}Welcome to aptman! 🌟${NC}"
 echo -e "${BLUE}======================================${NC}"
 echo -e "This script is located at: ${RED}$HOME/.local/bin/aptman${NC}"
+echo -e "Currently using ${PKG_MANAGER} as the package manager."
+if [ -n "$AUR_HELPER" ]; then
+    echo -e "AUR packages will be managed using: ${AUR_HELPER}"
+fi
 echo -e "${BLUE}======================================${NC}"
 
 # Show system info
@@ -25,88 +35,84 @@ echo -e "${BLUE}📁 Current directory: $(pwd)${NC}"
 echo -e "${BLUE}💻 User: $(whoami)${NC}"
 echo -e ""
 
-# Request sudo upfront
-sudo -v
-
-# Command handler
+# Request sudo upfront (only for commands that need it)
 case "$1" in
     update)
         echo -e "🔄 ${YELLOW}Updating package database...${NC}"
-        sudo pacman -Sy
+        sudo "$PKG_MANAGER" -Sy
         ;;
     upgrade)
-        if [ "$USE_YAY" = true ]; then
-            echo -e "⬆️ ${GREEN}Upgrading all packages (including AUR)...${NC}"
-            yay -Syu
+        echo -e "⬆️ ${GREEN}Upgrading all packages...${NC}"
+        if [ -n "$AUR_HELPER" ]; then
+            "$AUR_HELPER" -Syu 
         else
-            echo -e "⬆️ ${GREEN}Upgrading official packages...${NC}"
-            sudo pacman -Syu
+            "$PKG_MANAGER" -Syu
         fi
         ;;
     install)
         shift
-        if [ "$USE_YAY" = true ]; then
+        if [ -n "$AUR_HELPER" ]; then
             echo -e "📦 ${BLUE}Installing package(s) (official & AUR): $@${NC}"
-            yay -S "$@"
+            "$AUR_HELPER" -S "$@"
         else
             echo -e "📦 ${BLUE}Installing package(s) (official repo only): $@${NC}"
-            sudo pacman -S "$@"
+            sudo "$PKG_MANAGER" -S "$@"
         fi
         ;;
     remove)
         shift
         echo -e "🗑️ ${RED}Removing package(s): $@${NC}"
-        sudo pacman -R "$@"
+        sudo "$PKG_MANAGER" -R "$@"
         ;;
     autoremove)
         echo -e "🧹 ${YELLOW}Removing orphaned packages...${NC}"
-        sudo pacman -Rns $(pacman -Qdtq)
+        sudo "$PKG_MANAGER" -Rns $(pacman -Qdtq)
         ;;
     search)
         shift
-        if [ "$USE_YAY" = true ]; then
+        if [ -n "$AUR_HELPER" ]; then
             echo -e "🔍 ${GREEN}Searching for package (official & AUR): $@${NC}"
-            yay -Ss "$@"
+            "$AUR_HELPER" -Ss "$@"
         else
             echo -e "🔍 ${GREEN}Searching for package (official repo only): $@${NC}"
-            pacman -Ss "$@"
+            "$PKG_MANAGER" -Ss "$@"
         fi
         ;;
     info)
         shift
         echo -e "ℹ️ ${BLUE}Showing info for package: $@${NC}"
-        pacman -Qi "$@"
+        "$PKG_MANAGER" -Qi "$@"
         ;;
     list)
         echo -e "📋 ${YELLOW}Listing explicitly installed packages...${NC}"
-        pacman -Qe
+        "$PKG_MANAGER" -Qe
         ;;
     clean)
         echo -e "🧽 ${GREEN}Cleaning old package cache...${NC}"
-        sudo pacman -Sc
+        sudo "$PKG_MANAGER" -Sc
         ;;
     fullclean)
         echo -e "💣 ${RED}Removing all cached packages...${NC}"
-        sudo pacman -Scc
+        sudo "$PKG_MANAGER" -Scc
         ;;
     deps)
         echo -e "🔗 ${YELLOW}Checking for orphaned dependencies...${NC}"
-        pacman -Qdt
+        "$PKG_MANAGER" -Qdt
         ;;
     files)
         shift
         echo -e "📂 ${BLUE}Listing files of package: $@${NC}"
-        pacman -Ql "$@"
+        "$PKG_MANAGER" -Ql "$@"
         ;;
     find)
         shift
         echo -e "🔎 ${GREEN}Finding package containing: $@${NC}"
-        pacman -Fs "$@"
+        "$PKG_MANAGER" -Fs "$@"
         ;;
     ownedby)
         shift
         echo -e "🏷️ ${YELLOW}Finding package that owns: $@${NC}"
-        pacman -Qo "$@"
+        "$PKG_MANAGER" -Qo "$@"
         ;;
     *)
         echo -e "❓ ${RED}Invalid command!${NC}"
