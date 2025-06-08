@@ -42,12 +42,16 @@ case "$1" in
         sudo "$PKG_MANAGER" -Sy
         ;;
     upgrade)
+        echo -e "🔄 ${YELLOW}Updating package database...${NC}"
+        sudo "$PKG_MANAGER" -Sy
         echo -e "⬆️ ${GREEN}Upgrading all packages...${NC}"
         if [ -n "$AUR_HELPER" ]; then
             "$AUR_HELPER" -Syu 
         else
             "$PKG_MANAGER" -Syu
         fi
+        echo -e "🔄 ${YELLOW}Updating flatpak...${NC}"
+        sudo flatpak update -y
         ;;
     install)
         shift
