@@ -22,7 +22,7 @@ echo -e ""
 # Request sudo at the start
 sudo -v
 
-DEVILBOX_PATH="/mnt/data/devilbox"  # Path to Devilbox directory
+DEVILBOX_PATH="/home/frank/mnt/data/devilbox"  # Path to Devilbox directory
 CONTAINER_NAME="devilbox-php-1"     # PHP container name
 
 # Function: Get project path dynamically
